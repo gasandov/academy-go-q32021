@@ -1,16 +1,19 @@
 package routes
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gasandov/academy-go-q32021/controllers"
 
-	"academy-go-q32021/controllers"
+	"github.com/labstack/echo/v4"
 )
 
 func CreateEchoRoutes(e *echo.Echo) *echo.Echo {
-	e.GET("/health-check", controllers.HealthCheck)
+	healthController := controllers.NewHealthController()
+	pokemonController := controllers.NewPokemonController()
 
-	e.GET("/pokemons", controllers.GetPokemons)
-	e.GET("/pokemons/:id", controllers.GetPokemonById)
+	e.GET("/health-check", healthController.GetHealthCheck)
+
+	e.GET("/pokemons", pokemonController.GetPokemons)
+	e.GET("/pokemons/:id", pokemonController.GetPokemonById)
 
 	return e
 }

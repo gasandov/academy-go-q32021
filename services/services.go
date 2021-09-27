@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+// Receives a file name with .csv extension and returns
+// the content from it as array
 func ReadFile(fileName string) ([][]string, error) {
 	csvFile, err := os.Open(fileName)
 
