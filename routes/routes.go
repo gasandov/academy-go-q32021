@@ -9,11 +9,14 @@ import (
 func CreateEchoRoutes(e *echo.Echo) *echo.Echo {
 	healthController := controllers.NewHealthController()
 	pokemonController := controllers.NewPokemonController()
+	consumeController := controllers.NewConsumerController()
 
 	e.GET("/health-check", healthController.GetHealthCheck)
 
 	e.GET("/pokemons", pokemonController.GetPokemons)
 	e.GET("/pokemons/:id", pokemonController.GetPokemonById)
+
+	e.GET("/consume", consumeController.ConsumeAPI)
 
 	return e
 }
