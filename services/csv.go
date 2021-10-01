@@ -30,7 +30,7 @@ func ReadFile(fileName string) ([][]string, error) {
 
 // Receives a file name with extension and returns
 // a success string or an error
-func WriteFile(fileName string, data []byte) (string, error) {
+func WriteFile(fileName string, data []byte) (entities.APIResponse, error) {
 	var apiResponse entities.APIResponse
 
 	json.Unmarshal(data, &apiResponse)
@@ -40,7 +40,7 @@ func WriteFile(fileName string, data []byte) (string, error) {
 	defer file.Close()
 
 	if err != nil {
-		return "", err
+		return entities.APIResponse{}, err
 	}
 
 	writer := csv.NewWriter(file)
@@ -52,11 +52,11 @@ func WriteFile(fileName string, data []byte) (string, error) {
 		row = append(row, apiResponse.Results[i].Url)
 
 		if err := writer.Write(row); err != nil {
-			return "", err
+			return entities.APIResponse{}, err
 		}
 	}
 
 	defer writer.Flush()
 
-	return "File was created successfully", nil
+	return apiResponse, nil
 }
