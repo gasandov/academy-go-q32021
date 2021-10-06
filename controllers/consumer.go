@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gasandov/academy-go-q32021/services"
+	"github.com/gasandov/academy-go-q32021/repositories"
 
 	"github.com/labstack/echo/v4"
 )
@@ -45,7 +45,7 @@ func (a *apiConsumer) ConsumeAPI(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "API response could not be interpreted")
 	}
 
-	response, err := services.WriteFile("pokemon_list.csv", res)
+	response, err := repositories.WriteFile("pokemon_list.csv", res)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "There was an error while creating file")

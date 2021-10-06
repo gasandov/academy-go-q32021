@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gasandov/academy-go-q32021/common"
-	"github.com/gasandov/academy-go-q32021/services"
+	"github.com/gasandov/academy-go-q32021/repositories"
+	"github.com/gasandov/academy-go-q32021/usecases"
 
 	"github.com/labstack/echo/v4"
 )
@@ -21,13 +21,13 @@ type PokemonController interface {
 // Reads csv file and send to the client an
 // array of pokemons [{ id: #, name: string }]
 func (p *pokemon) GetPokemons(c echo.Context) error {
-	csvContent, err := services.ReadFile(fileName)
+	csvContent, err := repositories.ReadFile(fileName)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	_, pokemonsSlice := common.BuildPokemonCollections(csvContent)
+	_, pokemonsSlice := usecases.BuildPokemonCollections(csvContent)
 
 	return c.JSON(http.StatusOK, pokemonsSlice)
 }
@@ -41,13 +41,13 @@ func (p *pokemon) GetPokemonById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "ID was not provided")
 	}
 
-	csvContent, err := services.ReadFile(fileName)
+	csvContent, err := repositories.ReadFile(fileName)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	pokemonsMap, _ := common.BuildPokemonCollections(csvContent)
+	pokemonsMap, _ := usecases.BuildPokemonCollections(csvContent)
 
 	pokemon, exists := pokemonsMap[id]
 
