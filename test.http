@@ -1,0 +1,7 @@
+# GET http://localhost:8080/health-check
+
+# GET http://localhost:8080/pokemons
+
+GET http://localhost:8080/pokemons/3
+
+GET http://localhost:8080/consume?limit=10&offset=2

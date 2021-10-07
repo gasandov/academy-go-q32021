@@ -5,7 +5,7 @@ type Pokemon struct {
 	Name string `json:"name"`
 }
 
-type APIPokemon struct {
+type PokemonResponse struct {
 	Name string `json:"name"`
 	Url string `json:"url"`
 }

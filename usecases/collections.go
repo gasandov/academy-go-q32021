@@ -6,25 +6,27 @@ import (
 	"github.com/gasandov/academy-go-q32021/entities"
 )
 
-// Creates an array and a map of pokemons based on .csv input content
-func BuildPokemonCollections(csvLines [][]string) (map[string]entities.Pokemon, []entities.Pokemon) {
-	var pokemonsSlice []entities.Pokemon
-	pokemonsMap := make(map[string]entities.Pokemon)
-	
-	for _, line := range csvLines {
-		pokemon := parsePokemon(line)
+// Receives an [[name url]] and returns a map { '1': { Id: 1, Name: 'bulbasaur'} }
+// and a slice of pokemons [{ id: 1, name: 'bulbasaur' }]
+func BuildCollections(content [][]string) (map[string]entities.Pokemon, []entities.Pokemon) {
+	var pkSlice []entities.Pokemon
+	pkMap := make(map[string]entities.Pokemon)
 
-		pokemonsMap[pokemon.Id] = pokemon
-		pokemonsSlice = append(pokemonsSlice, pokemon)
+	for _, line := range content {
+		pokemon := parsePokemonResponse(line)
+
+		pkMap[pokemon.Id] = pokemon
+		pkSlice = append(pkSlice, pokemon)
 	}
 
-	return pokemonsMap, pokemonsSlice
+	return pkMap, pkSlice
 }
 
-// Receive array row of pokemon [name, url], parse url and return Pokemon { id: <int>, name: <string>}
-func parsePokemon(row []string) entities.Pokemon {
-	name := row[0]
-	url := row[1]
+// Receives [bulbasaur https://pokeapi.co/api/v2/pokemon/3/]
+// and returns a Pokemon{Id: 3, Name: 'bulbasaur'}
+func parsePokemonResponse(line []string) entities.Pokemon {
+	name := line[0]
+	url := line[1]
 	splited := strings.Split(url, "/")
 
 	id := splited[len(splited) - 2]

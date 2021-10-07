@@ -1,25 +1,24 @@
 package controllers
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
-	"github.com/gasandov/academy-go-q32021/repositories"
+	"github.com/gasandov/academy-go-q32021/entities"
 
 	"github.com/labstack/echo/v4"
 )
 
-type apiConsumer struct {}
-
-type APIConsumerController interface {
-	ConsumeAPI(c echo.Context) error
+type ConsumerHandler struct {
+	service consumerService
 }
 
-const apiUrl = "https://pokeapi.co/api/v2/pokemon"
+type consumerService interface {
+	Consume(limit, offset string) ([]byte, error)
+	SaveConsumed(fileName string, content []byte) (entities.API, error)
+}
 
-// Consumes an external API and writes the response on a csv file
-func (a *apiConsumer) ConsumeAPI(c echo.Context) error {
+// Expectes limit and offset. Consumes and saves content from API
+func (ch *ConsumerHandler) ConsumeAPI(c echo.Context) error {
 	limit := c.QueryParams().Get("limit")
 	offset := c.QueryParams().Get("offset")
 
@@ -31,29 +30,21 @@ func (a *apiConsumer) ConsumeAPI(c echo.Context) error {
 		offset = "1"
 	}
 
-	endpoint := fmt.Sprintf("%s?limit=%s&offset=%s", apiUrl, limit, offset)
-
-	data, err := http.Get(endpoint)
+	response, err := ch.service.Consume(limit, offset)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "API could not be consumed")
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	res, err := ioutil.ReadAll(data.Body)
+	content, err := ch.service.SaveConsumed(fileName, response)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "API response could not be interpreted")
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	response, err := repositories.WriteFile("pokemon_list.csv", res)
-
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, "There was an error while creating file")
-	}
-
-	return c.JSON(http.StatusOK, response)
+ 	return c.JSON(http.StatusOK, content)
 }
 
-func NewConsumerController() APIConsumerController {
-	return &apiConsumer{}
+func NewConsumerController(service consumerService) *ConsumerHandler {
+	return &ConsumerHandler{service}
 }

@@ -3,61 +3,53 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gasandov/academy-go-q32021/repositories"
-	"github.com/gasandov/academy-go-q32021/usecases"
+	"github.com/gasandov/academy-go-q32021/entities"
 
 	"github.com/labstack/echo/v4"
 )
 
-const fileName = "pokemon_list.csv"
-
-type pokemon struct {}
-
-type PokemonController interface {
-	GetPokemons(c echo.Context) error
-	GetPokemonById(c echo.Context) error
+type PokemonHandler struct {
+	service pokemonService
 }
 
-// Reads csv file and send to the client an
-// array of pokemons [{ id: #, name: string }]
-func (p *pokemon) GetPokemons(c echo.Context) error {
-	csvContent, err := repositories.ReadFile(fileName)
+type pokemonService interface {
+	Get(fileName string) (map[string]entities.Pokemon, []entities.Pokemon, error)
+}
+
+// Get all available pokemons
+func (ph *PokemonHandler) GetPokemons(c echo.Context) error {
+	_, pkSlice, err := ph.service.Get(fileName)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	_, pokemonsSlice := usecases.BuildPokemonCollections(csvContent)
-
-	return c.JSON(http.StatusOK, pokemonsSlice)
+	return c.JSON(http.StatusOK, pkSlice)
 }
 
-// Receives a param "id", reads from a csv file and sends
-// to the client a single pokemon { id: #, name: string }
-func (p *pokemon) GetPokemonById(c echo.Context) error {
+// Get pokemon by id (if any)
+func (ph *PokemonHandler) GetPokemonById(c echo.Context) error {
 	id := c.Param("id")
 
 	if id == "" {
-		return c.JSON(http.StatusBadRequest, "ID was not provided")
+		return c.JSON(http.StatusBadRequest, "id was not provided")
 	}
 
-	csvContent, err := repositories.ReadFile(fileName)
+	pkMap, _, err := ph.service.Get(fileName)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	pokemonsMap, _ := usecases.BuildPokemonCollections(csvContent)
-
-	pokemon, exists := pokemonsMap[id]
+	pokemon, exists := pkMap[id]
 
 	if !exists {
-		return c.JSON(http.StatusNotFound, "Pokemon was not found")
+		return c.JSON(http.StatusNotFound, "pokemon not found")
 	}
 
-	return c.JSON(http.StatusOK, pokemon)
+ 	return c.JSON(http.StatusOK, pokemon)
 }
 
-func NewPokemonController() PokemonController {
-	return &pokemon{}
+func NewPokemonController(service pokemonService) *PokemonHandler {
+	return &PokemonHandler{service}
 }
