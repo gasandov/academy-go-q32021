@@ -25,7 +25,7 @@ func (ps *PokemonService) Get(fileName string) (map[string]entities.Pokemon, []e
 		return nil, nil, errors.New("source could not be readed")
 	}
 
-	pkMap, pkSlice := BuildCollections(content)
+	pkMap, pkSlice := NewCollectionService().BuildCollections(content)
 
 	return pkMap, pkSlice, nil
 }

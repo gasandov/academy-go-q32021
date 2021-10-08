@@ -6,9 +6,11 @@ import (
 	"github.com/gasandov/academy-go-q32021/entities"
 )
 
+type collectionService struct {}
+
 // Receives an [[name url]] and returns a map { '1': { Id: 1, Name: 'bulbasaur'} }
 // and a slice of pokemons [{ id: 1, name: 'bulbasaur' }]
-func BuildCollections(content [][]string) (map[string]entities.Pokemon, []entities.Pokemon) {
+func (cs *collectionService) BuildCollections(content [][]string) (map[string]entities.Pokemon, []entities.Pokemon) {
 	var pkSlice []entities.Pokemon
 	pkMap := make(map[string]entities.Pokemon)
 
@@ -32,4 +34,8 @@ func parsePokemonResponse(line []string) entities.Pokemon {
 	id := splited[len(splited) - 2]
 
 	return entities.Pokemon{Id: id, Name: name}
+}
+
+func NewCollectionService() *collectionService {
+	return &collectionService{}
 }
