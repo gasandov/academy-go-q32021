@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/gasandov/academy-go-q32021/constants"
 	"github.com/gasandov/academy-go-q32021/entities"
 
 	"github.com/labstack/echo/v4"
@@ -36,7 +37,7 @@ func (ch *ConsumerHandler) ConsumeAPI(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	content, err := ch.service.SaveConsumed(fileName, response)
+	content, err := ch.service.SaveConsumed(constants.FileName, response)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)

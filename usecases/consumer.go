@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gasandov/academy-go-q32021/constants"
 	"github.com/gasandov/academy-go-q32021/entities"
 )
 
@@ -13,12 +14,10 @@ type ConsumerService struct {
 	repo csvIO
 }
 
-const apiUrl = "https://pokeapi.co/api/v2/pokemon"
-
 // Receives limit and offset, calls api endpoint with query params
 // and returns response (body []btye)
 func (cs *ConsumerService) Consume(limit, offset string) ([]byte, error) {
-	endpoint := fmt.Sprintf("%s?limit=%s&offset=%s", apiUrl, limit, offset)
+	endpoint := fmt.Sprintf("%s?limit=%s&offset=%s", constants.APIUrl, limit, offset)
 
 	data, err := http.Get(endpoint)
 
