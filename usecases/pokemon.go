@@ -38,6 +38,24 @@ func (ps *PokemonService) Get(fileName string) (map[string]entities.Pokemon, []e
 	return pkMap, pkSlice, nil
 }
 
+// Receives fileName and content []byte, creates file and writes the content on it
+// returns api response
+func (ps *PokemonService) Save(fileName string, content []byte) (entities.API, error) {
+	file, err := ps.repo.CreateFile(fileName)
+
+	if err != nil {
+		return entities.API{}, err
+	}
+
+	response, err := ps.repo.WriteFile(file, content)
+
+	if err != nil {
+		return entities.API{}, err
+	}
+
+	return response, nil
+}
+
 func NewPokemonService(repo csvIO) *PokemonService {
 	return &PokemonService{repo}
 }

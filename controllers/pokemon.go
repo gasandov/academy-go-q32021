@@ -15,6 +15,7 @@ type PokemonHandler struct {
 
 type pokemonService interface {
 	Get(fileName string) (map[string]entities.Pokemon, []entities.Pokemon, error)
+	Save(fileName string, content []byte) (entities.API, error)
 }
 
 // Get all available pokemons

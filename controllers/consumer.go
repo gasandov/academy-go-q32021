@@ -4,18 +4,17 @@ import (
 	"net/http"
 
 	"github.com/gasandov/academy-go-q32021/constants"
-	"github.com/gasandov/academy-go-q32021/entities"
 
 	"github.com/labstack/echo/v4"
 )
 
 type ConsumerHandler struct {
-	service consumerService
+	cService consumerService
+	pService pokemonService
 }
 
 type consumerService interface {
 	Consume(limit, offset string) ([]byte, error)
-	SaveConsumed(fileName string, content []byte) (entities.API, error)
 }
 
 // Expectes limit and offset. Consumes and saves content from API
@@ -31,13 +30,13 @@ func (ch *ConsumerHandler) ConsumeAPI(c echo.Context) error {
 		offset = "1"
 	}
 
-	response, err := ch.service.Consume(limit, offset)
+	response, err := ch.cService.Consume(limit, offset)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	content, err := ch.service.SaveConsumed(constants.FileName, response)
+	content, err := ch.pService.Save(constants.FileName, response)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -46,6 +45,6 @@ func (ch *ConsumerHandler) ConsumeAPI(c echo.Context) error {
  	return c.JSON(http.StatusOK, content)
 }
 
-func NewConsumerController(service consumerService) *ConsumerHandler {
-	return &ConsumerHandler{service}
+func NewConsumerController(cService consumerService, pService pokemonService) *ConsumerHandler {
+	return &ConsumerHandler{cService, pService}
 }

@@ -40,8 +40,6 @@ func (cv *csvIO) ReadFile(name string) ([][]string, error) {
 func (cv *csvIO) CreateFile(name string) (*os.File, error) {
 	file, err := os.Create(name)
 
-	defer file.Close()
-
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +67,7 @@ func (cv *csvIO) WriteFile(file *os.File, data []byte) (entities.API, error) {
 	}
 
 	defer writer.Flush()
+	defer file.Close()
 
 	return content, nil
 }

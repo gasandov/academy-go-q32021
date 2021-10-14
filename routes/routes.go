@@ -17,7 +17,7 @@ func CreateEchoRoutes(e *echo.Echo) *echo.Echo {
 	pokemonHandler := controllers.NewPokemonController(pokemonService)
 
 	consumerService := usecases.NewConsumerService(csvRepo)
-	consumerHandler := controllers.NewConsumerController(consumerService)
+	consumerHandler := controllers.NewConsumerController(consumerService, pokemonService)
 
 	e.GET("/health-check", healthHandler.GetHealthCheck)
 
