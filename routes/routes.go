@@ -19,12 +19,17 @@ func CreateEchoRoutes(e *echo.Echo) *echo.Echo {
 	consumerService := usecases.NewConsumerService(csvRepo)
 	consumerHandler := controllers.NewConsumerController(consumerService, pokemonService)
 
+	concurrentService := usecases.NewConcurrentService(csvRepo)
+	concurrentHandler := controllers.NewConcurrentController(concurrentService)
+
 	e.GET("/health-check", healthHandler.GetHealthCheck)
 
 	e.GET("/pokemons", pokemonHandler.GetPokemons)
 	e.GET("/pokemons/:id", pokemonHandler.GetPokemonById)
 
 	e.GET("/consume", consumerHandler.ConsumeAPI)
+
+	e.GET("/concurrently", concurrentHandler.GetPokemonsConcurrently)
 
 	return e
 }
