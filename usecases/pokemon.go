@@ -2,60 +2,113 @@ package usecases
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 
+	"github.com/gasandov/academy-go-q32021/constants"
 	"github.com/gasandov/academy-go-q32021/entities"
+	"github.com/gasandov/academy-go-q32021/utils"
 )
 
 type PokemonService struct {
-	repo csvIO
+	repo fileManager
 }
 
-type csvIO interface {
-	ReadFile(name string) ([][]string, error)
-	WriteFile(file *os.File, data []byte) (entities.API, error)
-	CreateFile(name string) (*os.File, error)
+type fileManager interface {
 	FileExists(name string) bool
+	CreateFile(name string) (*os.File, error)
+	ReadFile(name string) ([][]string, error)
+	OpenFile(name, flag string) (*os.File, error)
+	WriteFile(file *os.File, data []byte) (entities.APIResponse, error)
+	ReadFileConcurrently(name, flag string, items, itemsWorker int64) ([][]string, error)
 }
 
-// Receives fileName and reads from file (if exists)
-// returns a map and slice of pokemons
-func (ps *PokemonService) Get(fileName string) (map[string]entities.Pokemon, []entities.Pokemon, error) {
-	fileExists := ps.repo.FileExists(fileName)
+// receives limit and offset
+// calls api endpoint with query params and returns response
+// (body []byte)
+func (ps *PokemonService) ConsumeAPI(limit, offset int64) ([]byte, error) {
+	endpoint := fmt.Sprintf("%s?limit=%d&offset=%d", constants.APIUrl, limit, offset)
 
-	if !fileExists {
-		return nil, nil, errors.New("source not found")
+	data, err := http.Get(endpoint)
+	if err != nil {
+		return nil, err
 	}
 
-	content, err := ps.repo.ReadFile(fileName)
-
+	response, err := ioutil.ReadAll(data.Body)
 	if err != nil {
-		return nil, nil, errors.New("source could not be readed")
-	}
-
-	pkMap, pkSlice := NewCollectionService().BuildCollections(content)
-
-	return pkMap, pkSlice, nil
-}
-
-// Receives fileName and content []byte, creates file and writes the content on it
-// returns api response
-func (ps *PokemonService) Save(fileName string, content []byte) (entities.API, error) {
-	file, err := ps.repo.CreateFile(fileName)
-
-	if err != nil {
-		return entities.API{}, err
-	}
-
-	response, err := ps.repo.WriteFile(file, content)
-
-	if err != nil {
-		return entities.API{}, err
+		return nil, err
 	}
 
 	return response, nil
 }
 
-func NewPokemonService(repo csvIO) *PokemonService {
+// receives (content []byte)
+// creates file and writes content on it
+// if file exists, new content is append it
+// returns initial API response
+func (ps *PokemonService) StoreData(content []byte) (entities.APIResponse, error) {
+	if ps.repo.FileExists(constants.FileName) {
+		file, err := ps.repo.OpenFile(constants.FileName, "append")
+		if err != nil {
+			return entities.APIResponse{}, err
+		}
+
+		response, err := ps.repo.WriteFile(file, content)
+		if err != nil {
+			return entities.APIResponse{}, err
+		}
+
+		return response, err
+	}
+
+	file, err := ps.repo.CreateFile(constants.FileName)
+	if err != nil {
+		return entities.APIResponse{}, err
+	}
+
+	response, err := ps.repo.WriteFile(file, content)
+	if err != nil {
+		return entities.APIResponse{}, err
+	}
+
+	return response, err
+}
+
+// if file exists returns map and slice of pokemons
+func (ps *PokemonService) GetPokemonsData() (map[string]entities.Pokemon, []entities.Pokemon, error) {
+	exists := ps.repo.FileExists(constants.FileName)
+	if !exists {
+		return nil, nil, errors.New("source not found")
+	}
+
+	content, err := ps.repo.ReadFile(constants.FileName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pkMap, pkSlice := utils.BuildCollections(content)
+
+	return pkMap, pkSlice, nil
+}
+
+func (ps* PokemonService) GetPokemonsDataConcurrently(flag string, items, itemsWorker int64) (map[string]entities.Pokemon, error) {
+	exists := ps.repo.FileExists(constants.FileName)
+	if !exists {
+		return nil, errors.New("source not found")
+	}
+
+	content, err := ps.repo.ReadFileConcurrently(constants.FileName, flag, items, itemsWorker)
+	if err != nil {
+		return nil, err
+	}
+
+	pkMap, _ := utils.BuildCollections(content)
+
+	return pkMap, nil
+}
+
+func NewPokemonService(repo fileManager) *PokemonService {
 	return &PokemonService{repo}
 }

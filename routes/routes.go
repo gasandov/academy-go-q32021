@@ -9,27 +9,18 @@ import (
 )
 
 func CreateEchoRoutes(e *echo.Echo) *echo.Echo {
-	healthHandler := controllers.NewHealthController()
+	healthController := controllers.NewHealthController()
 
-	csvRepo := repositories.NewCSVRepo()
+	fileManagerRepo := repositories.NewFileManagerRepo()
+	pokemonService := usecases.NewPokemonService(fileManagerRepo)
+	pokemonController := controllers.NewPokemonController(pokemonService)
 
-	pokemonService := usecases.NewPokemonService(csvRepo)
-	pokemonHandler := controllers.NewPokemonController(pokemonService)
+	e.GET("/health-check", healthController.GetHealthCheck)
 
-	consumerService := usecases.NewConsumerService(csvRepo)
-	consumerHandler := controllers.NewConsumerController(consumerService, pokemonService)
-
-	concurrentService := usecases.NewConcurrentService(csvRepo)
-	concurrentHandler := controllers.NewConcurrentController(concurrentService)
-
-	e.GET("/health-check", healthHandler.GetHealthCheck)
-
-	e.GET("/pokemons", pokemonHandler.GetPokemons)
-	e.GET("/pokemons/:id", pokemonHandler.GetPokemonById)
-
-	e.GET("/consume", consumerHandler.ConsumeAPI)
-
-	e.GET("/concurrently", concurrentHandler.GetPokemonsConcurrently)
+	e.GET("/api/pokemons/concurrent", pokemonController.GetPokemonsConcurrently)
+	e.GET("/api/pokemons/source", pokemonController.GetPokemonsFromAPI)
+	e.GET("/api/pokemons/:id", pokemonController.GetPokemonById)
+	e.GET("/api/pokemons", pokemonController.GetPokemons)
 
 	return e
 }
