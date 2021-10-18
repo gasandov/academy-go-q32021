@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -143,3 +144,99 @@ func TestPokemonService_GetPokemonsData(t *testing.T) {
 	}
 }
 
+var expectedAPIResponse = entities.APIResponse{
+	Count: 3,
+	Next: "next",
+	Previous: "prev",
+	Results: []entities.PokemonAPI{
+		{
+			Name: "one",
+			Url: "url/one",
+		},
+		{
+			Name: "two",
+			Url: "url/two",
+		},
+		{
+			Name: "three",
+			Url: "url/three",
+		},
+	},
+}
+
+func TestPokemonService_StoreData(t *testing.T) {
+	tempFile, err := ioutil.TempFile("", constants.FileName)
+	if err != nil {
+		return
+	}
+
+	testCases := []struct {
+		name string
+		fileExists bool
+		tempFile *os.File
+		createFileErr error
+		writeFileErr error
+		content []byte
+		hasError bool
+		expectedErrMsg string
+		expectedLength int
+		expectedResponse entities.APIResponse
+	} {
+		{
+			"should return error on CreateFile fails",
+			false,
+			tempFile,
+			errors.New("could not create file"),
+			nil,
+			[]byte{},
+			true,
+			"could not create file",
+			0,
+			entities.APIResponse{},
+		},
+		{
+			"should return error on WriteFile fails",
+			false,
+			tempFile,
+			nil,
+			errors.New("coult not write in file"),
+			[]byte{},
+			true,
+			"coult not write in file",
+			0,
+			entities.APIResponse{},
+		},
+		{
+			"should return success response",
+			false,
+			tempFile,
+			nil,
+			nil,
+			[]byte{},
+			false,
+			"",
+			3,
+			expectedAPIResponse,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mock := MockFileManagerRepo{}
+			mock.On("FileExists", constants.FileName).Return(tc.fileExists)
+			mock.On("CreateFile", constants.FileName).Return(tc.tempFile, tc.createFileErr)
+			mock.On("WriteFile", tc.tempFile, tc.content).Return(tc.expectedResponse, tc.writeFileErr)
+
+			service := NewPokemonService(mock)
+
+			response, err := service.StoreData(tc.content)
+
+			if tc.hasError {
+				assert.EqualError(t, err, tc.expectedErrMsg)
+			}
+
+			assert.Len(t, response.Results, tc.expectedLength)
+			assert.Equal(t, response, tc.expectedResponse)
+		})
+	}
+}
