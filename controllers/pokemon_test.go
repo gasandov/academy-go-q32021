@@ -37,6 +37,22 @@ func (pc MockPokemonController) GetPokemonsDataConcurrently(flag string, items, 
 	return args.Get(0).(map[string]entities.Pokemon), args.Error(1)
 }
 
+var expectedMap = map[string]entities.Pokemon{
+	"201": {
+		Id: "201",
+		Name: "unown",
+	},
+	"202": {
+		Id: "202",
+		Name: "wobbuffet",
+	},
+	"203": {
+		Id: "203",
+		Name: "girafarig",
+	},
+}
+var expectedPokemon = "{\"id\":\"201\",\"name\":\"unown\"}\n"
+
 func TestPokemonController_GetPokemons(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -83,4 +99,79 @@ func TestPokemonController_GetPokemons(t *testing.T) {
 			}
 		})
 	}
-} 
+}
+
+func TestPokemonController_GetPokemonById(t *testing.T) {
+	testCases := []struct {
+		name string
+		hasError bool
+		idParam string
+		expectedMapResponse map[string]entities.Pokemon
+		expectedSliceResponse []entities.Pokemon
+		expectedError error
+		expectedErrMsg string
+		expectedBadHTTP int
+		expectedPokemon string
+	} {
+		{
+			"should return bad request on id not provided",
+			true,
+			"",
+			map[string]entities.Pokemon{},
+			[]entities.Pokemon{},
+			nil,
+			"\"id was not provided\"\n",
+			400,
+			"",
+		},
+		{
+			"should return bad request on pokemon not found",
+			true,
+			"199",
+			expectedMap,
+			[]entities.Pokemon{},
+			nil,
+			"\"pokemon not found\"\n",
+			404,
+			"",
+		},
+		{
+			"should return success response on pokemon found",
+			false,
+			"201",
+			expectedMap,
+			[]entities.Pokemon{},
+			nil,
+			"",
+			0,
+			expectedPokemon,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := echo.New()
+			req := httptest.NewRequest(http.MethodGet, "/api/pokemons", nil)
+			rec := httptest.NewRecorder()
+		
+			c := e.NewContext(req, rec)
+			c.SetParamNames("id")
+			c.SetParamValues(tc.idParam)
+
+			mock := MockPokemonController{}
+			mock.On("GetPokemonsData").Return(tc.expectedMapResponse, tc.expectedSliceResponse, tc.expectedError)
+
+			controller := NewPokemonController(mock)
+
+			controller.GetPokemonById(c)
+
+			if tc.hasError {
+				assert.Equal(t, tc.expectedBadHTTP, rec.Code)
+				assert.Equal(t, tc.expectedErrMsg, rec.Body.String())
+			} else {
+				assert.Equal(t, http.StatusOK, rec.Code)
+				assert.Equal(t, rec.Body.String(), tc.expectedPokemon)
+			}
+		})
+	}
+}
