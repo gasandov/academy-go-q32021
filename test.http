@@ -1,9 +1,9 @@
-GET http://localhost:8080/health-check
+# GET http://localhost:8080/api/pokemons/concurrent?type=even&items=4&items_per_workers=2
 
-GET http://localhost:8080/pokemons
+# GET http://localhost:8080/api/pokemons/source?limit=10&offset=300
 
-GET http://localhost:8080/pokemons/3
+# GET http://localhost:8080/api/pokemons/310
 
-GET http://localhost:8080/consume?limit=10&offset=2
+# GET http://localhost:8080/api/pokemons
 
-GET http://localhost:8080/concurrently?type=even&items=10&items_per_workers=2
+# GET http://localhost:8080/health-check
